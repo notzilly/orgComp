@@ -34,7 +34,7 @@ main:
             sw    $s0, 0($t0)   # atualizamos a variável a na memória
 l0:                             #
             #a = a + 1; // incrementamos a variável a         
-            addi  $0, $s0, 1    # incrementamos a variável a
+            addi  $s0, $s0, 1    # incrementamos a variável a
             sw    $s0, 0($t0)   # atualizamos o valor da variável a, na memória
             #if(a == 9) goto l1; // se a == 9 desvie para l1
             addi  $t1, $zero, 9 # carregamos 9 no registrador $t1

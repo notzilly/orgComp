@@ -50,7 +50,7 @@ l0:                             #
             # senão execute o código para condição falsa
             # }else{              // senão
             # goto l0;            // desvie incondicionalmente para l0
-            j     l0;           # desvie incondicionalmente para l0
+            #j     l0;           # desvie incondicionalmente para l0
             # }
             j pula_cond_verdadeira # desvie para não executar condição verdadeira
 if_cond_verdadeira:             # código executado quando a condição em if é verdadeira
