@@ -12,7 +12,7 @@
 # endereço 0x00400000
 
 .text
-.globl      main
+.globl    main
 main:       
     addiu $sp, $sp, 12  # alocamos na pilha espaço para as variáveis
     # abertura do arquivo de leitura
@@ -32,9 +32,45 @@ main:
     j     verificaFinalArquivo            
 lacoLeiaPalavra:
     # imprimimos a palavra se a leitura foi correta
-    lw    $a0, 4($sp)   # tomamos a palavra do buffer
-    li    $v0, 34       # serviço 34: imprime um inteiro em hexadecimal
+    #lw    $a0, 4($sp)   # tomamos a palavra do buffer
+    #li    $v0, 35       # serviço 34: imprime um inteiro em hexadecimal 
+    #syscall
+
+    # pega os 6 bits mais significativos (opcode)
+    lw    $t0, 4($sp)
+    srl   $t0, $t0, 26
+    # verifica se opcode é 0
+    slti  $t2, $t0, 1
+    bne   $t2, $zero, opCodeZero
+    # ajusta endereço pra pegar da tabela
+    sll   $t0, $t0, 3  # $t0 = $t0 * 8
+    # tabela de opcode
+    la    $t1, opcodeTable
+    add   $t1, $t1, $t0 # $t1 = ender. base + deslocamento
+    # printa opcode convertido
+    la    $a0, 0($t1)
+    li    $v0, 4
     syscall
+    # pula para decrementaContador
+    j decrementaContador
+
+opCodeZero:
+    # carrega instrução
+    lw    $t0, 4($sp)
+    # carrega máscara
+    li    $t2, 0x0000003F
+    # pega os 6 bits menos significativos (funct)
+    and   $t0, $t0, $t2
+    # ajusta endereço pra pegar da tabela
+    sll   $t0, $t0, 3  # $t0 = $t0 * 8
+    # tabela funct para opcode 000000
+    la    $t1, functTable00
+    add   $t1, $t1, $t0 # $t1 = ender. base + deslocamento
+
+    la    $a0, 0($t1)
+    li    $v0, 4
+    syscall
+
 decrementaContador:
     # decrementamos o contador
     lw    $t0, 8($sp)
@@ -49,11 +85,13 @@ decrementaContador:
     li    $v0, 11
     syscall
     j     verificaFinalArquivo
+
 imprimeEspaco:
     # imprimimos um espaço
     li    $a0,' '
     li    $v0, 11
     syscall
+
 verificaFinalArquivo:
     # lemos uma palavra do arquivo
     lw    $a0, 0($sp)   # $a0 <- descritor do arquivo
@@ -82,3 +120,189 @@ arquivoEntrada: # nome do arquivo de entrada
 .asciiz   "trabalhos/projeto_01_codigo.bin" 
 mensagemErroAberturaArquivo: # mensagem de erro se o arquivo não pode ser aberto
 .asciiz   "Erro na abertura do arquivo de entrada\n"
+opcodeTable:
+.align    2
+.space    8         # 00
+.align    2
+.space    8         # 01
+.align    2
+.asciiz   "j   "    # 02
+.align    2
+.asciiz   "jal "    # 03
+.align    2
+.asciiz   "beq "    # 04
+.align    2
+.asciiz   "bne "    # 05
+.align    2
+.asciiz   "blez"    # 06
+.align    2
+.asciiz   "bgtz"    # 07
+.align    2
+.asciiz   "addi"    # 08
+.align    2
+.asciiz   "addiu"   # 09
+.align    2
+.asciiz   "slti"    # 10
+.align    2
+.asciiz   "sltiu"   # 11
+.align    2
+.asciiz   "andi"    # 12
+.align    2
+.asciiz   "ori "    # 13
+.align    2
+.asciiz   "xori"    # 14
+.align    2
+.asciiz   "lui "    # 15
+.align    2
+.space    8         # 16
+.align    2
+.space    8         # 17
+.align    2
+.space    8         # 18
+.align    2
+.space    8         # 19
+.align    2
+.asciiz   "beql"    # 20
+.align    2
+.asciiz   "bnel"    # 21
+.align    2
+.asciiz   "blezl"   # 22
+.align    2
+.asciiz   "bgtzl"   # 23
+.align    2
+.space    8         # 24
+.align    2
+.space    8         # 25
+.align    2
+.space    8         # 26
+.align    2
+.space    8         # 27
+.align    2
+.space    8         # 28
+.align    2
+.space    8         # 29
+.align    2
+.space    8         # 30
+.align    2
+.space    8         # 31
+.align    2
+.asciiz   "lb  "    # 32
+.align    2
+.asciiz   "lh  "    # 33
+.align    2
+.asciiz   "lwl "    # 34
+.align    2
+.asciiz   "lw  "    # 35
+.align    2
+.asciiz   "lbu "    # 36
+.align    2
+.asciiz   "lhu "    # 37
+.align    2
+.asciiz   "lwr "    # 38
+.align    2
+.space    8         # 39
+.align    2
+.asciiz   "sb  "    # 40
+.align    2
+.asciiz   "sh  "    # 41
+.align    2
+.asciiz   "swl "    # 42
+.align    2
+.asciiz   "sw  "    # 43
+.align    2
+.space    8         # 44
+.align    2
+.space    8         # 45
+.align    2
+.asciiz   "swr "    # 46
+.align    2
+.asciiz   "cache"   # 47
+.align    2
+functTable00:
+.align    2
+.asciiz   "sll "    # 00
+.align    2
+.space    8         # 01
+.align    2
+.asciiz   "srl "    # 02
+.align    2
+.asciiz   "sra "    # 03
+.align    2
+.asciiz   "sllv"    # 04
+.align    2
+.space    8         # 05
+.align    2
+.asciiz   "srlv"    # 06
+.align    2
+.asciiz   "srav"    # 07
+.align    2
+.asciiz   "jr  "    # 08
+.align    2
+.asciiz   "jalr"    # 09
+.align    2
+.asciiz   "movz"    # 10
+.align    2
+.asciiz   "movn"    # 11
+.align    2
+.asciiz   "syscall" # 12
+.align    2
+.asciiz   "break"   # 13
+.align    2
+.space    8         # 14
+.align    2
+.asciiz   "sync"    # 15
+.align    2
+.asciiz   "mfhi"    # 16
+.align    2
+.asciiz   "mthi"    # 17
+.align    2
+.asciiz   "mflo"    # 18
+.align    2
+.asciiz   "mtlo"    # 19
+.align    2
+.space    8         # 20
+.align    2
+.space    8         # 21
+.align    2
+.space    8         # 22
+.align    2
+.space    8         # 23
+.align    2
+.asciiz   "mult"    # 24
+.align    2
+.asciiz   "multu"   # 25
+.align    2
+.asciiz   "div "    # 26
+.align    2
+.asciiz   "divu"    # 27
+.align    2
+.space    8         # 28
+.align    2
+.space    8         # 29
+.align    2
+.space    8         # 30
+.align    2
+.space    8         # 31
+.align    2
+.asciiz   "add "    # 32
+.align    2
+.asciiz   "addu"    # 33
+.align    2
+.asciiz   "sub "    # 34
+.align    2
+.asciiz   "subu"    # 35
+.align    2
+.asciiz   "and "    # 36
+.align    2
+.asciiz   "or  "    # 37
+.align    2
+.asciiz   "xor "    # 38
+.align    2
+.asciiz   "nor "    # 39
+.align    2
+.space    8         # 40
+.align    2
+.space    8         # 41
+.align    2
+.asciiz   "slt "    # 42
+.align    2
