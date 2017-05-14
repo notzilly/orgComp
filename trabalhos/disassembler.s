@@ -42,6 +42,7 @@ lacoLeiaPalavra:
     # verifica se opcode é 0
     slti  $t2, $t0, 1
     bne   $t2, $zero, opCodeZero
+    # trecho de instruções I e J
     # ajusta endereço pra pegar da tabela
     sll   $t0, $t0, 3  # $t0 = $t0 * 8
     # tabela de opcode
@@ -51,10 +52,63 @@ lacoLeiaPalavra:
     la    $a0, 0($t1)
     li    $v0, 4
     syscall
+
+    # imprimimos um espaço e um $
+    la    $a0, stringEspaco
+    li    $v0, 4
+    syscall
+
+    # RS
+    # carrega instrução
+    lw    $t0, 4($sp)
+    # carrega máscara
+    li    $t2, 0x001F0000
+    # pega os 5 bits após o opcode
+    and   $t0, $t0, $t2
+    srl   $a0, $t0, 16   #shifta valor para a direita
+    # printa registrador rs
+    li    $v0, 1
+    syscall
+
+    # imprimimos uma virgula, um espaço e um $
+    la    $a0, stringVirgula
+    li    $v0, 4
+    syscall
+
+    # RT
+    # carrega instrução
+    lw    $t0, 4($sp)
+    # carrega máscara
+    li    $t2, 0x03E00000
+    # pega os 5 bits após o rs
+    and   $t0, $t0, $t2
+    srl   $a0, $t0, 21   #shifta valor para a direita
+    # printa registrador rt
+    li    $v0, 1
+    syscall
+
+    # imprimimos uma virgula, um espaço e um $
+    la    $a0, stringVirgula
+    li    $v0, 4
+    syscall
+
+    # IMMEDIATE
+    # carrega instrução
+    lw    $t0, 4($sp)
+    # carrega máscara
+    li    $t2, 0x0000FFFF
+    # pega os 16 bits após o rt (immediate)
+    and   $a0, $t0, $t2
+    # printa immediate
+    li    $v0, 34
+    syscall   
+
     # pula para decrementaContador
     j decrementaContador
 
 opCodeZero:
+    # trecho para instruções do tipo R
+    # OPCODE
     # carrega instrução
     lw    $t0, 4($sp)
     # carrega máscara
@@ -66,9 +120,60 @@ opCodeZero:
     # tabela funct para opcode 000000
     la    $t1, functTable00
     add   $t1, $t1, $t0 # $t1 = ender. base + deslocamento
-
+    # printa nome da instrução
     la    $a0, 0($t1)
     li    $v0, 4
+    syscall
+
+    # imprimimos um espaço e um $
+    la    $a0, stringEspaco
+    li    $v0, 4
+    syscall
+
+    # RS
+    # carrega instrução
+    lw    $t0, 4($sp)
+    # carrega máscara
+    li    $t2, 0x0000F800
+    # pega os 5 bits após o opcode
+    and   $t0, $t0, $t2
+    srl   $a0, $t0, 11   #shifta valor para a direita
+    # printa registrador rs
+    li    $v0, 1
+    syscall
+
+    # imprimimos uma virgula, um espaço e um $
+    la    $a0, stringVirgula
+    li    $v0, 4
+    syscall
+
+    # RT
+    # carrega instrução
+    lw    $t0, 4($sp)
+    # carrega máscara
+    li    $t2, 0x03E00000
+    # pega os 5 bits após o rs
+    and   $t0, $t0, $t2
+    srl   $a0, $t0, 21   #shifta valor para a direita
+    # printa registrador rt
+    li    $v0, 1
+    syscall
+
+    # imprimimos uma virgula, um espaço e um $
+    la    $a0, stringVirgula
+    li    $v0, 4
+    syscall
+
+    # RD
+    # carrega instrução
+    lw    $t0, 4($sp)
+    # carrega máscara
+    li    $t2, 0x001F0000
+    # pega os 5 bits após o rt
+    and   $t0, $t0, $t2
+    srl   $a0, $t0, 16   #shifta valor para a direita
+    # printa registrador rd
+    li    $v0, 1
     syscall
 
 decrementaContador:
@@ -116,6 +221,8 @@ erroAberturaArquivoLeitura:
     syscall
                      
 .data
+stringVirgula: .asciiz ", $"
+stringEspaco:  .asciiz " $"
 arquivoEntrada: # nome do arquivo de entrada
 .asciiz   "trabalhos/projeto_01_codigo.bin" 
 mensagemErroAberturaArquivo: # mensagem de erro se o arquivo não pode ser aberto
