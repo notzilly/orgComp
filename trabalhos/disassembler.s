@@ -14,7 +14,7 @@
 .text
 .globl    main
 main:       
-    addiu $sp, $sp, 12  # alocamos na pilha espaço para as variáveis
+    addiu $sp, $sp, -8  # alocamos na pilha espaço para as variáveis
     # abertura do arquivo de leitura
     la    $a0, arquivoEntrada # $a0 <- endereço da string com o nome do arquivo
     li    $a1, 0 # flags: 0  - leitura
@@ -26,8 +26,8 @@ main:
     slt   $t0, $v0, $zero # verificamos se houve um erro na abertura do arquivo
     bne   $t0, $zero, erroAberturaArquivoLeitura
     #  fazemos um contador igual a 8
-    li    $t0, 8
-    sw    $t0, 8($sp)
+    #li    $t0, 8
+    #sw    $t0, 8($sp)
     # enquanto não chegamos no final do arquivo executamos o laço lacoLeiaPalavra
     j     verificaFinalArquivo            
 lacoLeiaPalavra:
@@ -43,8 +43,15 @@ lacoLeiaPalavra:
     slti  $t2, $t0, 1
     bne   $t2, $zero, opCodeZero
     # trecho de instruções I e J
+
+    #if opcode = 02 ou = 03
+    li    $t3, 2
+    beq   $t0, $t3, opCodeJump
+    li    $t3, 3
+    beq   $t0, $t3, opCodeJump
+
     # ajusta endereço pra pegar da tabela
-    sll   $t0, $t0, 3  # $t0 = $t0 * 8
+    sll   $t0, $t0, 4  # $t0 = $t0 * 16
     # tabela de opcode
     la    $t1, opcodeTable
     add   $t1, $t1, $t0 # $t1 = ender. base + deslocamento
@@ -103,8 +110,8 @@ lacoLeiaPalavra:
     li    $v0, 34
     syscall   
 
-    # pula para decrementaContador
-    j decrementaContador
+    # pula para novaLinhaInstrucao
+    j novaLinhaInstrucao
 
 opCodeZero:
     # trecho para instruções do tipo R
@@ -116,7 +123,7 @@ opCodeZero:
     # pega os 6 bits menos significativos (funct)
     and   $t0, $t0, $t2
     # ajusta endereço pra pegar da tabela
-    sll   $t0, $t0, 3  # $t0 = $t0 * 8
+    sll   $t0, $t0, 4  # $t0 = $t0 * 16
     # tabela funct para opcode 000000
     la    $t1, functTable00
     add   $t1, $t1, $t0 # $t1 = ender. base + deslocamento
@@ -176,16 +183,45 @@ opCodeZero:
     li    $v0, 1
     syscall
 
-decrementaContador:
+    j novaLinhaInstrucao
+
+opCodeJump:
+    # ajusta endereço pra pegar da tabela
+    sll   $t0, $t0, 4  # $t0 = $t0 * 16
+    # tabela de opcode
+    la    $t1, opcodeTable
+    add   $t1, $t1, $t0 # $t1 = ender. base + deslocamento
+    # printa opcode convertido
+    la    $a0, 0($t1)
+    li    $v0, 4
+    syscall
+
+    # imprimimos um espaço
+    la    $a0, stringLabel
+    li    $v0, 4
+    syscall
+
+    # LABEL
+    # carrega instrução
+    lw    $t0, 4($sp)
+    # carrega máscara
+    li    $t2, 0x03FFFFFF
+    # pega os 26 bits após o opcode
+    and   $t0, $t0, $t2
+    # printa registrador rs
+    li    $v0, 34
+    syscall
+
+novaLinhaInstrucao:
     # decrementamos o contador
-    lw    $t0, 8($sp)
-    addiu $t0, $t0, -1
-    sw    $t0, 8($sp)
+    #lw    $t0, 8($sp)
+    #addiu $t0, $t0, -1
+    #sw    $t0, 8($sp)
     # se contador=0 (imprimimos 8 palavras) gera uma nova linha
-    bne   $t0, $zero, imprimeEspaco
+    #bne   $t0, $zero, imprimeEspaco
     # faz contador igual a 8
-    li    $t0, 8
-    sw    $t0, 8($sp)
+    #li    $t0, 8
+    #sw    $t0, 8($sp)
     li    $a0, '\n'
     li    $v0, 11
     syscall
@@ -208,6 +244,7 @@ verificaFinalArquivo:
     slti  $t0, $v0, 4
     beq   $t0, $zero, lacoLeiaPalavra
     # terminamos o programa
+    addiu $sp, $sp, 8 # restaura pilha
     li    $a0, 0 # 0 <- programa terminou de forma normal
     li    $v0, 17 # serviço exit2 - termina o programa
     syscall
@@ -223,193 +260,317 @@ erroAberturaArquivoLeitura:
 .data
 stringVirgula: .asciiz ", $"
 stringEspaco:  .asciiz " $"
+stringLabel:   .asciiz " "
 arquivoEntrada: # nome do arquivo de entrada
 .asciiz   "trabalhos/projeto_01_codigo.bin" 
 mensagemErroAberturaArquivo: # mensagem de erro se o arquivo não pode ser aberto
 .asciiz   "Erro na abertura do arquivo de entrada\n"
-opcodeTable:
+opcodeTable:  # cada instrução + tipo ocupam 16 bytes
 .align    2
-.space    8         # 00
+.space    16        # 00 - function table
 .align    2
-.space    8         # 01
+.space    16        # 01
 .align    2
-.asciiz   "j   "    # 02
+.asciiz   "j   "    # 02 - J
 .align    2
-.asciiz   "jal "    # 03
+.word     0
+.space    4
 .align    2
-.asciiz   "beq "    # 04
+.asciiz   "jal "    # 03 - J
 .align    2
-.asciiz   "bne "    # 05
+.word     0
+.space    4
 .align    2
-.asciiz   "blez"    # 06
+.asciiz   "beq "    # 04 - I
 .align    2
-.asciiz   "bgtz"    # 07
+.word
 .align    2
-.asciiz   "addi"    # 08
+.asciiz   "bne "    # 05 - I
 .align    2
-.asciiz   "addiu"   # 09
+.word
 .align    2
-.asciiz   "slti"    # 10
+.asciiz   "blez"    # 06 - I
 .align    2
-.asciiz   "sltiu"   # 11
+.word
 .align    2
-.asciiz   "andi"    # 12
+.asciiz   "bgtz"    # 07 - I
 .align    2
-.asciiz   "ori "    # 13
+.word
 .align    2
-.asciiz   "xori"    # 14
+.asciiz   "addi"    # 08 - I
 .align    2
-.asciiz   "lui "    # 15
+.word
 .align    2
-.space    8         # 16
+.asciiz   "addiu"   # 09 - I
 .align    2
-.space    8         # 17
+.word
 .align    2
-.space    8         # 18
+.asciiz   "slti"    # 10 - I
 .align    2
-.space    8         # 19
+.word
 .align    2
-.asciiz   "beql"    # 20
+.asciiz   "slitu"   # 11 - I
 .align    2
-.asciiz   "bnel"    # 21
+.word
 .align    2
-.asciiz   "blezl"   # 22
+.asciiz   "andi"    # 12 - I
 .align    2
-.asciiz   "bgtzl"   # 23
+.word
 .align    2
-.space    8         # 24
+.asciiz   "ori "    # 13 - I
 .align    2
-.space    8         # 25
+.word
 .align    2
-.space    8         # 26
+.asciiz   "xori"    # 14 - I
 .align    2
-.space    8         # 27
+.word
 .align    2
-.space    8         # 28
+.asciiz   "lui "    # 15 - I
 .align    2
-.space    8         # 29
+.word
 .align    2
-.space    8         # 30
+.space    16        # 16
 .align    2
-.space    8         # 31
+.space    16        # 17
 .align    2
-.asciiz   "lb  "    # 32
+.space    16        # 16
 .align    2
-.asciiz   "lh  "    # 33
+.space    16        # 19
 .align    2
-.asciiz   "lwl "    # 34
+.asciiz   "beql"    # 20 - I
 .align    2
-.asciiz   "lw  "    # 35
+.word
 .align    2
-.asciiz   "lbu "    # 36
+.asciiz   "bnel"    # 21 - I
 .align    2
-.asciiz   "lhu "    # 37
+.word
 .align    2
-.asciiz   "lwr "    # 38
+.asciiz   "blezl"   # 22 - I
 .align    2
-.space    8         # 39
+.word
 .align    2
-.asciiz   "sb  "    # 40
+.asciiz   "bgtzl"   # 23 - I
 .align    2
-.asciiz   "sh  "    # 41
+.word
 .align    2
-.asciiz   "swl "    # 42
+.space    16        # 24
 .align    2
-.asciiz   "sw  "    # 43
+.space    16        # 25
 .align    2
-.space    8         # 44
+.space    16        # 26
 .align    2
-.space    8         # 45
+.space    16        # 27
 .align    2
-.asciiz   "swr "    # 46
+.space    16        # 28
 .align    2
-.asciiz   "cache"   # 47
+.space    16        # 29
+.align    2
+.space    16        # 30
+.align    2
+.space    16        # 31
+.align    2
+.asciiz   "lb  "    # 32 - I
+.align    2
+.word
+.align    2
+.asciiz   "lh  "    # 33 - I
+.align    2
+.word
+.align    2
+.asciiz   "lwl "    # 34 - I
+.align    2
+.word
+.align    2
+.asciiz   "lw  "    # 35 - I
+.align    2
+.word
+.align    2
+.asciiz   "lbu "    # 36 - I
+.align    2
+.word
+.align    2
+.asciiz   "lhu "    # 37 - I
+.align    2
+.word
+.align    2
+.asciiz   "lwr "    # 38 - I
+.align    2
+.word
+.align    2
+.space    16        # 39
+.align    2
+.asciiz   "sb  "    # 40 - I
+.align    2
+.word
+.align    2
+.asciiz   "sh  "    # 41 - I
+.align    2
+.word
+.align    2
+.asciiz   "swl "    # 42 - I
+.align    2
+.word
+.align    2
+.asciiz   "sw  "    # 43 - I
+.align    2
+.word
+.align    2
+.space    16        # 44 - I
+.align    2
+.space    16        # 45 - I
+.align    2
+.asciiz   "swr "    # 46 - I
+.align    2
+.word
+.align    2
+.asciiz   "cache"   # 47 - I
+.align    2
+.word
 .align    2
 functTable00:
-.align    2
 .asciiz   "sll "    # 00
 .align    2
-.space    8         # 01
+.word
+.align    2
+.space    16        # 01
 .align    2
 .asciiz   "srl "    # 02
 .align    2
+.word
+.align    2
 .asciiz   "sra "    # 03
+.align    2
+.word
 .align    2
 .asciiz   "sllv"    # 04
 .align    2
-.space    8         # 05
+.word
+.align    2
+.space    16        # 05
 .align    2
 .asciiz   "srlv"    # 06
 .align    2
+.word
+.align    2
 .asciiz   "srav"    # 07
+.align    2
+.word
 .align    2
 .asciiz   "jr  "    # 08
 .align    2
+.word
+.align    2
 .asciiz   "jalr"    # 09
+.align    2
+.word
 .align    2
 .asciiz   "movz"    # 10
 .align    2
+.word
+.align    2
 .asciiz   "movn"    # 11
+.align    2
+.word
 .align    2
 .asciiz   "syscall" # 12
 .align    2
+.word
+.align    2
 .asciiz   "break"   # 13
 .align    2
-.space    8         # 14
+.word
+.align    2
+.space    16        # 14
 .align    2
 .asciiz   "sync"    # 15
 .align    2
+.word
+.align    2
 .asciiz   "mfhi"    # 16
+.align    2
+.word
 .align    2
 .asciiz   "mthi"    # 17
 .align    2
+.word
+.align    2
 .asciiz   "mflo"    # 18
+.align    2
+.word
 .align    2
 .asciiz   "mtlo"    # 19
 .align    2
-.space    8         # 20
+.word
 .align    2
-.space    8         # 21
+.space    16        # 20
 .align    2
-.space    8         # 22
+.space    16        # 21
 .align    2
-.space    8         # 23
+.space    16        # 22
+.align    2
+.space    16        # 23
 .align    2
 .asciiz   "mult"    # 24
 .align    2
+.word
+.align    2
 .asciiz   "multu"   # 25
+.align    2
+.word
 .align    2
 .asciiz   "div "    # 26
 .align    2
+.word
+.align    2
 .asciiz   "divu"    # 27
 .align    2
-.space    8         # 28
+.word
 .align    2
-.space    8         # 29
+.space    16        # 28
 .align    2
-.space    8         # 30
+.space    16        # 29
 .align    2
-.space    8         # 31
+.space    16        # 30
+.align    2
+.space    16        # 31
 .align    2
 .asciiz   "add "    # 32
 .align    2
+.word
+.align    2
 .asciiz   "addu"    # 33
+.align    2
+.word
 .align    2
 .asciiz   "sub "    # 34
 .align    2
+.word
+.align    2
 .asciiz   "subu"    # 35
+.align    2
+.word
 .align    2
 .asciiz   "and "    # 36
 .align    2
+.word
+.align    2
 .asciiz   "or  "    # 37
+.align    2
+.word
 .align    2
 .asciiz   "xor "    # 38
 .align    2
+.word
+.align    2
 .asciiz   "nor "    # 39
 .align    2
-.space    8         # 40
+.word
 .align    2
-.space    8         # 41
+.space    16        # 40
+.align    2
+.space    16        # 41
 .align    2
 .asciiz   "slt "    # 42
+.align    2
+.word
 .align    2
