@@ -296,50 +296,62 @@ opcodeTable:  # cada instrução + tipo ocupam 16 bytes
 .asciiz   "beq "    # 04 - I2
 .align    2
 .word     2
+.space    4
 .align    2
 .asciiz   "bne "    # 05 - I2
 .align    2
 .word     2
+.space    4
 .align    2
 .asciiz   "blez"    # 06 - I5
 .align    2
 .word     5
+.space    4
 .align    2
 .asciiz   "bgtz"    # 07 - I5
 .align    2
 .word     5
+.space    4
 .align    2
 .asciiz   "addi"    # 08 - I1
 .align    2
 .word     1
+.space    4
 .align    2
 .asciiz   "addiu"   # 09 - I1
 .align    2
 .word     1
+.space    4
 .align    2
 .asciiz   "slti"    # 10 - I1
 .align    2
 .word     1
+.space    4
 .align    2
 .asciiz   "slitu"   # 11 - I1
 .align    2
 .word     1
+.space    4
 .align    2
 .asciiz   "andi"    # 12 - I1
 .align    2
 .word     1
+.space    4
 .align    2
 .asciiz   "ori "    # 13 - I1
 .align    2
 .word     1
+.space    4
 .align    2
 .asciiz   "xori"    # 14 - I1
 .align    2
 .word     1
+.space    4
 .align    2
 .asciiz   "lui "    # 15 - I4
 .align    2
 .word     4
+.space    4
 .align    2
 .space    16        # 16
 .align    2
@@ -376,48 +388,59 @@ opcodeTable:  # cada instrução + tipo ocupam 16 bytes
 .asciiz   "lb  "    # 32 - I3
 .align    2
 .word     3
+.space    4
 .align    2
 .asciiz   "lh  "    # 33 - I3
 .align    2
 .word     3
+.space    4
 .align    2
 .asciiz   "lwl "    # 34 - I3
 .align    2
 .word     3
+.space    4
 .align    2
 .asciiz   "lw  "    # 35 - I3
 .align    2
 .word     3
+.space    4
 .align    2
 .asciiz   "lbu "    # 36 - I3
 .align    2
 .word     3
+.space    4
 .align    2
 .asciiz   "lhu "    # 37 - I3
 .align    2
 .word     3
+.space    4
 .align    2
 .asciiz   "lwr "    # 38 - I3
 .align    2
 .word     3
+.space    4
 .align    2
 .space    16        # 39
 .align    2
 .asciiz   "sb  "    # 40 - I3
 .align    2
 .word     3
+.space    4
 .align    2
 .asciiz   "sh  "    # 41 - I3
 .align    2
 .word     3
+.space    4
 .align    2
 .asciiz   "swl "    # 42 - I3
 .align    2
 .word     3
+.space    4
 .align    2
 .asciiz   "sw  "    # 43 - I3
 .align    2
 .word     3
+.space    4
 .align    2
 .space    16        # 44 
 .align    2
@@ -426,55 +449,67 @@ opcodeTable:  # cada instrução + tipo ocupam 16 bytes
 .asciiz   "swr "    # 46 - I3
 .align    2
 .word     3
+.space    4
 .align    2
 functTable00:
 .asciiz   "sll "    # 00 - R2
 .align    2
 .word     7
+.space    4
 .align    2
 .space    16        # 01
 .align    2
 .asciiz   "srl "    # 02 - R2
 .align    2
 .word     7
+.space    4
 .align    2
 .asciiz   "sra "    # 03 - R2
 .align    2
 .word     7
+.space    4
 .align    2
 .asciiz   "sllv"    # 04 - R1
 .align    2
 .word     6
+.space    4
 .align    2
 .space    16        # 05
 .align    2
 .asciiz   "srlv"    # 06 - R1
 .align    2
 .word     6
+.space    4
 .align    2
 .asciiz   "srav"    # 07 - R1
 .align    2
 .word     6
+.space    4
 .align    2
 .asciiz   "jr  "    # 08 - R3
 .align    2
 .word     8
+.space    4
 .align    2
 .asciiz   "jalr"    # 09 - R3
 .align    2
 .word     8
+.space    4
 .align    2
 .asciiz   "movz"    # 10 - R1
 .align    2
 .word     6
+.space    4
 .align    2
 .asciiz   "movn"    # 11 - R1
 .align    2
 .word     6
+.space    4
 .align    2
 .asciiz   "syscall" # 12 - R6
 .align    2
 .word     11
+.space    4
 .align    2
 .space    16        # 13
 .align    2
@@ -485,18 +520,22 @@ functTable00:
 .asciiz   "mfhi"    # 16 - R5
 .align    2
 .word     10
+.space    4
 .align    2
 .asciiz   "mthi"    # 17 - R5
 .align    2
 .word     10
+.space    4
 .align    2
 .asciiz   "mflo"    # 18 - R5
 .align    2
 .word     10
+.space    4
 .align    2
 .asciiz   "mtlo"    # 19 - R5
 .align    2
 .word     10
+.space    4
 .align    2
 .space    16        # 20
 .align    2
@@ -509,18 +548,22 @@ functTable00:
 .asciiz   "mult"    # 24 - R4
 .align    2
 .word     9
+.space    4
 .align    2
 .asciiz   "multu"   # 25 - R4
 .align    2
 .word     9
+.space    4
 .align    2
 .asciiz   "div "    # 26 - R4
 .align    2
 .word     9
+.space    4
 .align    2
 .asciiz   "divu"    # 27 - R4
 .align    2
 .word     9
+.space    4
 .align    2
 .space    16        # 28
 .align    2
@@ -533,34 +576,42 @@ functTable00:
 .asciiz   "add "    # 32 - R1
 .align    2
 .word     6
+.space    4
 .align    2
 .asciiz   "addu"    # 33 - R1
 .align    2
 .word     6
+.space    4
 .align    2
 .asciiz   "sub "    # 34 - R1
 .align    2
 .word     6
+.space    4
 .align    2
 .asciiz   "subu"    # 35 - R1
 .align    2
 .word     6
+.space    4
 .align    2
 .asciiz   "and "    # 36 - R1
 .align    2
 .word     6
+.space    4
 .align    2
 .asciiz   "or  "    # 37 - R1
 .align    2
 .word     6
+.space    4
 .align    2
 .asciiz   "xor "    # 38 - R1
 .align    2
 .word     6
+.space    4
 .align    2
 .asciiz   "nor "    # 39 - R1
 .align    2
 .word     6
+.space    4
 .align    2
 .space    16        # 40
 .align    2
@@ -569,8 +620,10 @@ functTable00:
 .asciiz   "slt "    # 42 - R1
 .align    2
 .word     6
+.space    4
 .align    2
 .asciiz   "sltu"   # 43 - R1
 .align    2
 .word     6
+.space    4
 .align    2
