@@ -184,14 +184,61 @@ I3:
     # pula para novaLinhaInstrucao
     j novaLinhaInstrucao
 I4:
+    # RT, immediate
+    la    $a0, stringEspaco # imprimimos um espaço e um $
+    li    $v0, 4
+    syscall
+
+    # RT
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x001F0000 # carrega máscara
+    and   $t0, $t0, $t2 # pega os 5 bits do RT
+    srl   $a0, $t0, 16 # shifta valor para a direita
+    # printa registrador RT
+    li    $v0, 1
+    syscall
+
+    la    $a0, stringVirEsp # imprimimos uma virgula e um espaço
+    li    $v0, 4
+    syscall
+
+    # IMMEDIATE
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x0000FFFF # carrega máscara
+    and   $a0, $t0, $t2 # pega os 16 bits após o RS (immediate)
+    li    $v0, 34 # printa immediate como hex
+    syscall
+
     # pula para novaLinhaInstrucao
     j novaLinhaInstrucao
 I5:
+    # RS, offset
+    la    $a0, stringEspaco # imprimimos um espaço e um $
+    li    $v0, 4
+    syscall
+
+    # RS
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x03E00000 # carrega máscara
+    and   $t0, $t0, $t2 # pega os 5 bits após RT
+    srl   $a0, $t0, 21 # shifta valor para a direita
+    li    $v0, 1 # printa registrador RS como inteiro
+    syscall
+
+    la    $a0, stringVirEsp # imprimimos uma virgula e um espaço
+    li    $v0, 4
+    syscall
+
+    # offset
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x0000FFFF # carrega máscara
+    and   $a0, $t0, $t2 # pega os 16 bits após o RS
+    li    $v0, 34 # printa offset
+    syscall
+
     # pula para novaLinhaInstrucao
     j novaLinhaInstrucao
-
     
-
 opCodeR:
     # trecho para instruções do tipo R
     # OPCODE
