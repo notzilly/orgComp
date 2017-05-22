@@ -25,95 +25,174 @@ main:
     sw    $v0, 0($sp)   # gravamos o descritor do arquivo
     slt   $t0, $v0, $zero # verificamos se houve um erro na abertura do arquivo
     bne   $t0, $zero, erroAberturaArquivoLeitura
-    #  fazemos um contador igual a 8
-    #li    $t0, 8
-    #sw    $t0, 8($sp)
-    # enquanto não chegamos no final do arquivo executamos o laço lacoLeiaPalavra
+
     j     verificaFinalArquivo            
 lacoLeiaPalavra:
-    # imprimimos a palavra se a leitura foi correta
-    #lw    $a0, 4($sp)   # tomamos a palavra do buffer
-    #li    $v0, 35       # serviço 34: imprime um inteiro em hexadecimal 
-    #syscall
+    
+    lw    $t0, 4($sp) # carrega instrução
+    srl   $t0, $t0, 26 # pega os 6 MSB
+    slti  $t2, $t0, 1 # verifica se opcode é 0
+    bne   $t2, $zero, opCodeR # salta para trecho de instruções R
+    
+    # imprime mneumônico para instruções I e J
+    sll   $t2, $t0, 4  # ajusta endereço pra pegar da tabela -> $t2 = $t0 * 16
+    la    $t1, opcodeTable # tabela de opcode
+    add   $t1, $t1, $t2 # $t1 = ender. base + deslocamento
+    la    $a0, 0($t1) # printa mneumônico como string
+    li    $v0, 4
+    syscall
 
-    # pega os 6 bits mais significativos (opcode)
-    lw    $t0, 4($sp)
-    srl   $t0, $t0, 26
-    # verifica se opcode é 0
-    slti  $t2, $t0, 1
-    bne   $t2, $zero, opCodeZero
-    # trecho de instruções I e J
-
-    #if opcode = 02 ou = 03
+    # verifica se instrução é do tipo J
     li    $t3, 2
-    beq   $t0, $t3, opCodeJump
+    beq   $t0, $t3, opCodeJ # if opcode = 02 
     li    $t3, 3
-    beq   $t0, $t3, opCodeJump
+    beq   $t0, $t3, opCodeJ # ou = 03
 
-    # ajusta endereço pra pegar da tabela
-    sll   $t0, $t0, 4  # $t0 = $t0 * 16
-    # tabela de opcode
-    la    $t1, opcodeTable
-    add   $t1, $t1, $t0 # $t1 = ender. base + deslocamento
-    # printa opcode convertido
-    la    $a0, 0($t1)
-    li    $v0, 4
-    syscall
+opcodeI:
+    # switch para instruções tipo I
+    lw    $t0, 8($t1)  # pega tipo da instrução
+    li    $t2, 1
+    beq   $t0, $t2, I1  # tipo I1
+    li    $t2, 2
+    beq   $t0, $t2, I2  # tipo I2
+    li    $t2, 3
+    beq   $t0, $t2, I3  # tipo I3
+    li    $t2, 4
+    beq   $t0, $t2, I4  # tipo I4
+    li    $t2, 5
+    beq   $t0, $t2, I5  # tipo I5
 
-    # imprimimos um espaço e um $
-    la    $a0, stringEspaco
-    li    $v0, 4
-    syscall
-
-    # RS
-    # carrega instrução
-    lw    $t0, 4($sp)
-    # carrega máscara
-    li    $t2, 0x001F0000
-    # pega os 5 bits após o opcode
-    and   $t0, $t0, $t2
-    srl   $a0, $t0, 16   #shifta valor para a direita
-    # printa registrador rs
-    li    $v0, 1
-    syscall
-
-    # imprimimos uma virgula, um espaço e um $
-    la    $a0, stringVirgula
+I1:
+    # RT, RS, immediate
+    la    $a0, stringEspaco # imprimimos um espaço e um $
     li    $v0, 4
     syscall
 
     # RT
-    # carrega instrução
-    lw    $t0, 4($sp)
-    # carrega máscara
-    li    $t2, 0x03E00000
-    # pega os 5 bits após o rs
-    and   $t0, $t0, $t2
-    srl   $a0, $t0, 21   #shifta valor para a direita
-    # printa registrador rt
-    li    $v0, 1
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x001F0000 # carrega máscara
+    and   $t0, $t0, $t2 # pega os 5 bits após o opcode
+    srl   $a0, $t0, 16 # shifta valor para a direita
+    li    $v0, 1 # printa registrador RT como inteiro
     syscall
 
-    # imprimimos uma virgula, um espaço e um $
-    la    $a0, stringVirgula
+    la    $a0, stringVirgula # imprimimos uma virgula, um espaço e um $
+    li    $v0, 4
+    syscall
+
+    # RS
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x03E00000 # carrega máscara
+    and   $t0, $t0, $t2 # pega os 5 bits após o RT
+    srl   $a0, $t0, 21 # shifta valor para a direita
+    li    $v0, 1 # printa registrador RS como inteiro
+    syscall
+
+    la    $a0, stringVirgula # imprimimos uma virgula, um espaço e um $
     li    $v0, 4
     syscall
 
     # IMMEDIATE
-    # carrega instrução
-    lw    $t0, 4($sp)
-    # carrega máscara
-    li    $t2, 0x0000FFFF
-    # pega os 16 bits após o rt (immediate)
-    and   $a0, $t0, $t2
-    # printa immediate
-    li    $v0, 34
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x0000FFFF # carrega máscara
+    and   $a0, $t0, $t2 # pega os 16 bits após o RS (immediate)
+    li    $v0, 34 # printa immediate como hex
     syscall   
 
     # pula para novaLinhaInstrucao
     j novaLinhaInstrucao
+I2:
+    # RT, RS, offset
+    la    $a0, stringEspaco # imprimimos um espaço e um $
+    li    $v0, 4
+    syscall
 
-opCodeZero:
+    # RT
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x03E00000 # carrega máscara
+    and   $t0, $t0, $t2 # pega os 5 bits após opcode
+    srl   $a0, $t0, 21 # shifta valor para a direita
+    li    $v0, 1 # printa registrador rt como inteiro
+    syscall
+
+    la    $a0, stringVirgula # imprimimos uma virgula, um espaço e um $
+    li    $v0, 4
+    syscall
+
+    # RS
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x001F0000 # carrega máscara
+    and   $t0, $t0, $t2 # pega os 5 bits após o RT
+    srl   $a0, $t0, 16 # shifta valor para a direita
+    li    $v0, 1 # printa registrador rs como inteiro
+    syscall
+
+    la    $a0, stringVirEsp # imprimimos uma virgula e um espaço
+    li    $v0, 4
+    syscall
+
+    # offset
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x0000FFFF # carrega máscara
+    and   $a0, $t0, $t2 # pega os 16 bits após o RS
+    li    $v0, 34 # printa offset
+    syscall
+
+    j novaLinhaInstrucao # pula para novaLinhaInstrucao
+I3:
+    # RT, offset(RS)
+    la    $a0, stringEspaco # imprimimos um espaço e um $
+    li    $v0, 4
+    syscall
+
+    # RT
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x001F0000 # carrega máscara
+    and   $t0, $t0, $t2 # pega os 5 bits após RS
+    srl   $a0, $t0, 16 # shifta valor para a direita
+    # printa registrador RT
+    li    $v0, 1
+    syscall
+
+    la    $a0, stringVirEsp # imprimimos uma virgula e um espaço
+    li    $v0, 4
+    syscall
+
+    # offset
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x0000FFFF # carrega máscara
+    and   $a0, $t0, $t2 # pega os 16 bits após o RS
+    li    $v0, 34 # printa offset
+    syscall
+
+    la    $a0, stringAbrePar # imprimimos um abre par. e um cifrão
+    li    $v0, 4
+    syscall
+
+    # RS
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x03E00000 # carrega máscara
+    and   $t0, $t0, $t2 # pega os 5 bits após RT
+    srl   $a0, $t0, 21 # shifta valor para a direita
+    li    $v0, 1 # printa registrador RS como inteiro
+    syscall
+
+    la    $a0, stringFechPar # imprimimos um fecha par.
+    li    $v0, 4
+    syscall
+    
+    # pula para novaLinhaInstrucao
+    j novaLinhaInstrucao
+I4:
+    # pula para novaLinhaInstrucao
+    j novaLinhaInstrucao
+I5:
+    # pula para novaLinhaInstrucao
+    j novaLinhaInstrucao
+
+    
+
+opCodeR:
     # trecho para instruções do tipo R
     # OPCODE
     # carrega instrução
@@ -185,53 +264,25 @@ opCodeZero:
 
     j novaLinhaInstrucao
 
-opCodeJump:
-    # ajusta endereço pra pegar da tabela
-    sll   $t0, $t0, 4  # $t0 = $t0 * 16
-    # tabela de opcode
-    la    $t1, opcodeTable
-    add   $t1, $t1, $t0 # $t1 = ender. base + deslocamento
-    # printa opcode convertido
-    la    $a0, 0($t1)
-    li    $v0, 4
-    syscall
-
-    # imprimimos um espaço
-    la    $a0, stringLabel
+opCodeJ:
+    
+    la    $a0, stringLabel # imprimimos um espaço
     li    $v0, 4
     syscall
 
     # LABEL
-    # carrega instrução
-    lw    $t0, 4($sp)
-    # carrega máscara
-    li    $t2, 0x03FFFFFF
-    # pega os 26 bits após o opcode
-    and   $t0, $t0, $t2
-    # printa registrador rs
-    li    $v0, 34
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x03FFFFFF # carrega máscara para pegar os 26 últimos bits
+    and   $a0, $t0, $t2 # pega os 26 bits após o opcode
+    sll   $a0, $a0, 2 # calcula endereço de salto
+    li    $v0, 34 # printa endereço de salto
     syscall
 
 novaLinhaInstrucao:
-    # decrementamos o contador
-    #lw    $t0, 8($sp)
-    #addiu $t0, $t0, -1
-    #sw    $t0, 8($sp)
-    # se contador=0 (imprimimos 8 palavras) gera uma nova linha
-    #bne   $t0, $zero, imprimeEspaco
-    # faz contador igual a 8
-    #li    $t0, 8
-    #sw    $t0, 8($sp)
     li    $a0, '\n'
     li    $v0, 11
     syscall
     j     verificaFinalArquivo
-
-imprimeEspaco:
-    # imprimimos um espaço
-    li    $a0,' '
-    li    $v0, 11
-    syscall
 
 verificaFinalArquivo:
     # lemos uma palavra do arquivo
@@ -260,7 +311,10 @@ erroAberturaArquivoLeitura:
 .data
 stringVirgula: .asciiz ", $"
 stringEspaco:  .asciiz " $"
+stringVirEsp:  .asciiz ", "
 stringLabel:   .asciiz " "
+stringAbrePar: .asciiz "($"
+stringFechPar: .asciiz ")"
 arquivoEntrada: # nome do arquivo de entrada
 .asciiz   "trabalhos/projeto_01_codigo.bin" 
 mensagemErroAberturaArquivo: # mensagem de erro se o arquivo não pode ser aberto
@@ -622,7 +676,7 @@ functTable00:
 .word     6
 .space    4
 .align    2
-.asciiz   "sltu"   # 43 - R1
+.asciiz   "sltu"    # 43 - R1
 .align    2
 .word     6
 .space    4
