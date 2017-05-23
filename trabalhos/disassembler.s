@@ -26,9 +26,9 @@ main:
     slt   $t0, $v0, $zero # verificamos se houve um erro na abertura do arquivo
     bne   $t0, $zero, erroAberturaArquivoLeitura
 
-    j     verificaFinalArquivo            
+    j     verificaFinalArquivo
+
 lacoLeiaPalavra:
-    
     lw    $t0, 4($sp) # carrega instrução
     srl   $t0, $t0, 26 # pega os 6 MSB
     slti  $t2, $t0, 1 # verifica se opcode é 0
@@ -240,23 +240,29 @@ I5:
     j novaLinhaInstrucao
     
 opCodeR:
-    # trecho para instruções do tipo R
     # OPCODE
-    # carrega instrução
-    lw    $t0, 4($sp)
-    # carrega máscara
-    li    $t2, 0x0000003F
-    # pega os 6 bits menos significativos (funct)
-    and   $t0, $t0, $t2
-    # ajusta endereço pra pegar da tabela
-    sll   $t0, $t0, 4  # $t0 = $t0 * 16
-    # tabela funct para opcode 000000
-    la    $t1, functTable00
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x0000003F # carrega máscara
+    and   $t0, $t0, $t2 # pega os 6 bits menos significativos (funct)
+    sll   $t0, $t0, 4  # ajusta endereço pra pegar da tabela -> $t0 = $t0 * 16
+    la    $t1, functTable00 # tabela funct para opcode 000000
     add   $t1, $t1, $t0 # $t1 = ender. base + deslocamento
-    # printa nome da instrução
-    la    $a0, 0($t1)
+    la    $a0, 0($t1) # printa mneumônico
     li    $v0, 4
     syscall
+
+    # switch para instruções tipo R
+    lw    $t0, 8($t1)  # pega tipo da instrução
+    li    $t2, 1
+    beq   $t0, $t2, R1  # tipo R1
+    li    $t2, 2
+    beq   $t0, $t2, R2  # tipo R2
+    li    $t2, 3
+    beq   $t0, $t2, R3  # tipo R3
+    li    $t2, 4
+    beq   $t0, $t2, R4  # tipo R4
+    li    $t2, 5
+    beq   $t0, $t2, R5  # tipo R5
 
     # imprimimos um espaço e um $
     la    $a0, stringEspaco
