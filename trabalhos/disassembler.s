@@ -71,7 +71,7 @@ I1:
     # RT
     lw    $t0, 4($sp) # carrega instrução
     li    $t2, 0x001F0000 # carrega máscara
-    and   $t0, $t0, $t2 # pega os 5 bits após o opcode
+    and   $t0, $t0, $t2 # pega os 5 bits
     srl   $a0, $t0, 16 # shifta valor para a direita
     li    $v0, 1 # printa registrador RT como inteiro
     syscall
@@ -83,24 +83,28 @@ I1:
     # RS
     lw    $t0, 4($sp) # carrega instrução
     li    $t2, 0x03E00000 # carrega máscara
-    and   $t0, $t0, $t2 # pega os 5 bits após o RT
+    and   $t0, $t0, $t2 # pega os 5 bits
     srl   $a0, $t0, 21 # shifta valor para a direita
     li    $v0, 1 # printa registrador RS como inteiro
     syscall
 
-    la    $a0, stringVirgula # imprimimos uma virgula, um espaço e um $
+    la    $a0, stringVirEsp # imprimimos uma virgula e um espaço
     li    $v0, 4
     syscall
 
     # IMMEDIATE
     lw    $t0, 4($sp) # carrega instrução
     li    $t2, 0x0000FFFF # carrega máscara
-    and   $a0, $t0, $t2 # pega os 16 bits após o RS (immediate)
-    li    $v0, 34 # printa immediate como hex
-    syscall   
+    and   $t0, $t0, $t2 # pega os 16 bits
+    addi  $sp, $sp, -4 # ajusta pilha
+    sh    $t0, 0($sp) # extendemos o sinal do immediate
+    lh    $a0, 0($sp)
+    addi  $sp, $sp, 4 # restaura pilha
+    li    $v0, 1 # printa immediate como inteiro
+    syscall
+    
+    j novaLinhaInstrucao # pula para novaLinhaInstrucao
 
-    # pula para novaLinhaInstrucao
-    j novaLinhaInstrucao
 I2:
     # RT, RS, offset
     la    $a0, stringEspaco # imprimimos um espaço e um $
@@ -110,7 +114,7 @@ I2:
     # RT
     lw    $t0, 4($sp) # carrega instrução
     li    $t2, 0x03E00000 # carrega máscara
-    and   $t0, $t0, $t2 # pega os 5 bits após opcode
+    and   $t0, $t0, $t2 # pega os 5 bits
     srl   $a0, $t0, 21 # shifta valor para a direita
     li    $v0, 1 # printa registrador rt como inteiro
     syscall
@@ -122,7 +126,7 @@ I2:
     # RS
     lw    $t0, 4($sp) # carrega instrução
     li    $t2, 0x001F0000 # carrega máscara
-    and   $t0, $t0, $t2 # pega os 5 bits após o RT
+    and   $t0, $t0, $t2 # pega os 5 bits
     srl   $a0, $t0, 16 # shifta valor para a direita
     li    $v0, 1 # printa registrador rs como inteiro
     syscall
@@ -134,11 +138,12 @@ I2:
     # offset
     lw    $t0, 4($sp) # carrega instrução
     li    $t2, 0x0000FFFF # carrega máscara
-    and   $a0, $t0, $t2 # pega os 16 bits após o RS
+    and   $a0, $t0, $t2 # pega os 16 bits
     li    $v0, 34 # printa offset
     syscall
 
     j novaLinhaInstrucao # pula para novaLinhaInstrucao
+
 I3:
     # RT, offset(RS)
     la    $a0, stringEspaco # imprimimos um espaço e um $
@@ -148,7 +153,7 @@ I3:
     # RT
     lw    $t0, 4($sp) # carrega instrução
     li    $t2, 0x001F0000 # carrega máscara
-    and   $t0, $t0, $t2 # pega os 5 bits após RS
+    and   $t0, $t0, $t2 # pega os 5 bits
     srl   $a0, $t0, 16 # shifta valor para a direita
     # printa registrador RT
     li    $v0, 1
@@ -161,7 +166,7 @@ I3:
     # offset
     lw    $t0, 4($sp) # carrega instrução
     li    $t2, 0x0000FFFF # carrega máscara
-    and   $a0, $t0, $t2 # pega os 16 bits após o RS
+    and   $a0, $t0, $t2 # pega os 16 bits
     li    $v0, 34 # printa offset
     syscall
 
@@ -172,7 +177,7 @@ I3:
     # RS
     lw    $t0, 4($sp) # carrega instrução
     li    $t2, 0x03E00000 # carrega máscara
-    and   $t0, $t0, $t2 # pega os 5 bits após RT
+    and   $t0, $t0, $t2 # pega os 5 bits
     srl   $a0, $t0, 21 # shifta valor para a direita
     li    $v0, 1 # printa registrador RS como inteiro
     syscall
@@ -181,8 +186,8 @@ I3:
     li    $v0, 4
     syscall
     
-    # pula para novaLinhaInstrucao
-    j novaLinhaInstrucao
+    j novaLinhaInstrucao # pula para novaLinhaInstrucao
+
 I4:
     # RT, immediate
     la    $a0, stringEspaco # imprimimos um espaço e um $
@@ -192,7 +197,7 @@ I4:
     # RT
     lw    $t0, 4($sp) # carrega instrução
     li    $t2, 0x001F0000 # carrega máscara
-    and   $t0, $t0, $t2 # pega os 5 bits do RT
+    and   $t0, $t0, $t2 # pega os 5 bits
     srl   $a0, $t0, 16 # shifta valor para a direita
     # printa registrador RT
     li    $v0, 1
@@ -205,12 +210,12 @@ I4:
     # IMMEDIATE
     lw    $t0, 4($sp) # carrega instrução
     li    $t2, 0x0000FFFF # carrega máscara
-    and   $a0, $t0, $t2 # pega os 16 bits após o RS (immediate)
+    and   $a0, $t0, $t2 # pega os 16 bits
     li    $v0, 34 # printa immediate como hex
     syscall
 
-    # pula para novaLinhaInstrucao
-    j novaLinhaInstrucao
+    j novaLinhaInstrucao # pula para novaLinhaInstrucao
+
 I5:
     # RS, offset
     la    $a0, stringEspaco # imprimimos um espaço e um $
@@ -220,7 +225,7 @@ I5:
     # RS
     lw    $t0, 4($sp) # carrega instrução
     li    $t2, 0x03E00000 # carrega máscara
-    and   $t0, $t0, $t2 # pega os 5 bits após RT
+    and   $t0, $t0, $t2 # pega os 5 bits
     srl   $a0, $t0, 21 # shifta valor para a direita
     li    $v0, 1 # printa registrador RS como inteiro
     syscall
@@ -232,12 +237,11 @@ I5:
     # offset
     lw    $t0, 4($sp) # carrega instrução
     li    $t2, 0x0000FFFF # carrega máscara
-    and   $a0, $t0, $t2 # pega os 16 bits após o RS
+    and   $a0, $t0, $t2 # pega os 16 bits
     li    $v0, 34 # printa offset
     syscall
 
-    # pula para novaLinhaInstrucao
-    j novaLinhaInstrucao
+    j novaLinhaInstrucao # pula para novaLinhaInstrucao
     
 opCodeR:
     # OPCODE
@@ -253,72 +257,164 @@ opCodeR:
 
     # switch para instruções tipo R
     lw    $t0, 8($t1)  # pega tipo da instrução
-    li    $t2, 1
+    li    $t2, 6
     beq   $t0, $t2, R1  # tipo R1
-    li    $t2, 2
+    li    $t2, 7
     beq   $t0, $t2, R2  # tipo R2
-    li    $t2, 3
+    li    $t2, 8
     beq   $t0, $t2, R3  # tipo R3
-    li    $t2, 4
+    li    $t2, 9
     beq   $t0, $t2, R4  # tipo R4
-    li    $t2, 5
+    li    $t2, 10
     beq   $t0, $t2, R5  # tipo R5
+    li    $t2, 11
+    beq   $t0, $t2, R6  # tipo R6
 
-    # imprimimos um espaço e um $
-    la    $a0, stringEspaco
-    li    $v0, 4
-    syscall
-
-    # RS
-    # carrega instrução
-    lw    $t0, 4($sp)
-    # carrega máscara
-    li    $t2, 0x0000F800
-    # pega os 5 bits após o opcode
-    and   $t0, $t0, $t2
-    srl   $a0, $t0, 11   #shifta valor para a direita
-    # printa registrador rs
-    li    $v0, 1
-    syscall
-
-    # imprimimos uma virgula, um espaço e um $
-    la    $a0, stringVirgula
-    li    $v0, 4
-    syscall
-
-    # RT
-    # carrega instrução
-    lw    $t0, 4($sp)
-    # carrega máscara
-    li    $t2, 0x03E00000
-    # pega os 5 bits após o rs
-    and   $t0, $t0, $t2
-    srl   $a0, $t0, 21   #shifta valor para a direita
-    # printa registrador rt
-    li    $v0, 1
-    syscall
-
-    # imprimimos uma virgula, um espaço e um $
-    la    $a0, stringVirgula
+R1:
+    # RD, RS, RT
+    la    $a0, stringEspaco # imprimimos um espaço e um $
     li    $v0, 4
     syscall
 
     # RD
-    # carrega instrução
-    lw    $t0, 4($sp)
-    # carrega máscara
-    li    $t2, 0x001F0000
-    # pega os 5 bits após o rt
-    and   $t0, $t0, $t2
-    srl   $a0, $t0, 16   #shifta valor para a direita
-    # printa registrador rd
-    li    $v0, 1
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x0000F800 # carrega máscara
+    and   $t0, $t0, $t2 # pega os 5 bits
+    srl   $a0, $t0, 11 # shifta valor para a direita
+    li    $v0, 1 # printa registrador RD como inteiro
     syscall
 
-    j novaLinhaInstrucao
+    la    $a0, stringVirgula # imprimimos uma virgula, um espaço e um $
+    li    $v0, 4
+    syscall
+
+    # RS
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x03E00000 # carrega máscara
+    and   $t0, $t0, $t2 # pega os 5 bits
+    srl   $a0, $t0, 21 # shifta valor para a direita
+    li    $v0, 1 # printa registrador RS
+    syscall
+
+    la    $a0, stringVirgula # imprimimos uma virgula, um espaço e um $
+    li    $v0, 4
+    syscall
+
+    # RT
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x001F0000 # carrega máscara
+    and   $t0, $t0, $t2 # pega os 5 bits
+    srl   $a0, $t0, 16 # shifta valor para a direita
+    li    $v0, 1 # printa registrador RT
+    syscall
+
+    j novaLinhaInstrucao # pula para novaLinhaInstrucao
+
+R2:
+    # RD, RT, shift_amm
+    la    $a0, stringEspaco # imprimimos um espaço e um $
+    li    $v0, 4
+    syscall
+
+    # RD
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x0000F800 # carrega máscara
+    and   $t0, $t0, $t2 # pega os 5 bits
+    srl   $a0, $t0, 11 # shifta valor para a direita
+    li    $v0, 1 # printa registrador RD como inteiro
+    syscall
+
+    la    $a0, stringVirgula # imprimimos uma virgula, um espaço e um $
+    li    $v0, 4
+    syscall
+
+    # RT
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x001F0000 # carrega máscara
+    and   $t0, $t0, $t2 # pega os 5 bits
+    srl   $a0, $t0, 16 # shifta valor para a direita
+    li    $v0, 1 # printa registrador RT
+    syscall
+
+    la    $a0, stringVirEsp # imprimimos uma virgula e um espaço
+    li    $v0, 4
+    syscall
+
+    # SHIFT AMMOUNT
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x000007C0 # carrega máscara
+    and   $t0, $t0, $t2 # pega os 5 bits
+    srl   $a0, $t0, 6 # shifta valor para a direita
+    li    $v0, 1 # printa shift ammount
+    syscall
+
+    j novaLinhaInstrucao # pula para novaLinhaInstrucao
+
+R3:
+    # RS
+    la    $a0, stringEspaco # imprimimos um espaço e um $
+    li    $v0, 4
+    syscall
+
+    # RS
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x03E00000 # carrega máscara
+    and   $t0, $t0, $t2 # pega os 5 bits
+    srl   $a0, $t0, 21 # shifta valor para a direita
+    li    $v0, 1 # printa registrador RS
+    syscall
+
+    j novaLinhaInstrucao # pula para novaLinhaInstrucao
+
+R4:
+    # RS, RT
+    la    $a0, stringEspaco # imprimimos um espaço e um $
+    li    $v0, 4
+    syscall
+
+    # RS
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x03E00000 # carrega máscara
+    and   $t0, $t0, $t2 # pega os 5 bits
+    srl   $a0, $t0, 21 # shifta valor para a direita
+    li    $v0, 1 # printa registrador RS
+    syscall
+
+    la    $a0, stringEspaco # imprimimos um espaço e um $
+    li    $v0, 4
+    syscall
+
+    # RT
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x001F0000 # carrega máscara
+    and   $t0, $t0, $t2 # pega os 5 bits
+    srl   $a0, $t0, 16 # shifta valor para a direita
+    li    $v0, 1 # printa registrador RT
+    syscall
+
+    j novaLinhaInstrucao # pula para novaLinhaInstrucao
+
+R5:
+    # RD
+    la    $a0, stringEspaco # imprimimos um espaço e um $
+    li    $v0, 4
+    syscall
+
+    # RD
+    lw    $t0, 4($sp) # carrega instrução
+    li    $t2, 0x0000F800 # carrega máscara
+    and   $t0, $t0, $t2 # pega os 5 bits
+    srl   $a0, $t0, 11 # shifta valor para a direita
+    li    $v0, 1 # printa registrador RD como inteiro
+    syscall
+
+    j novaLinhaInstrucao # pula para novaLinhaInstrucao
+
+R6:
+    # MNEUMÔNICO (já foi printado)
+    j novaLinhaInstrucao # pula para novaLinhaInstrucao
 
 opCodeJ:
-    
     la    $a0, stringLabel # imprimimos um espaço
     li    $v0, 4
     syscall
