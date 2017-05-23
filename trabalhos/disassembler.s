@@ -14,7 +14,7 @@
 .text
 .globl    main
 main:       
-    addiu $sp, $sp, -8  # alocamos na pilha espaço para as variáveis
+    addiu $sp, $sp, -12  # alocamos na pilha espaço para as variáveis
     # abertura do arquivo de leitura
     la    $a0, arquivoEntrada # $a0 <- endereço da string com o nome do arquivo
     li    $a1, 0 # flags: 0  - leitura
@@ -26,9 +26,20 @@ main:
     slt   $t0, $v0, $zero # verificamos se houve um erro na abertura do arquivo
     bne   $t0, $zero, erroAberturaArquivoLeitura
 
+    li    $s0, 0x00400000 # PC inicial
+    sw    $s0, 8($sp)   # guardamos na pilha
+
     j     verificaFinalArquivo
 
 lacoLeiaPalavra:
+    lw    $a0, 8($sp) # imprime PC
+    li    $v0, 34
+    syscall
+
+    la    $a0, stringLabel # imprime espaço
+    li    $v0, 4
+    syscall
+
     lw    $t0, 4($sp) # carrega instrução
     srl   $t0, $t0, 26 # pega os 6 MSB
     slti  $t2, $t0, 1 # verifica se opcode é 0
@@ -95,12 +106,8 @@ I1:
     # IMMEDIATE
     lw    $t0, 4($sp) # carrega instrução
     li    $t2, 0x0000FFFF # carrega máscara
-    and   $t0, $t0, $t2 # pega os 16 bits
-    addi  $sp, $sp, -4 # ajusta pilha
-    sh    $t0, 0($sp) # extendemos o sinal do immediate
-    lh    $a0, 0($sp)
-    addi  $sp, $sp, 4 # restaura pilha
-    li    $v0, 1 # printa immediate como inteiro
+    and   $a0, $t0, $t2 # pega os 16 bits
+    li    $v0, 34 # printa immediate como inteiro
     syscall
     
     j novaLinhaInstrucao # pula para novaLinhaInstrucao
@@ -422,18 +429,29 @@ opCodeJ:
     # LABEL
     lw    $t0, 4($sp) # carrega instrução
     li    $t2, 0x03FFFFFF # carrega máscara para pegar os 26 últimos bits
-    and   $a0, $t0, $t2 # pega os 26 bits após o opcode
-    sll   $a0, $a0, 2 # calcula endereço de salto
+    and   $t0, $t0, $t2 # pega os 26 bits após o opcode
+    sll   $t0, $t0, 2 # shifta registrador
+
+    lw    $s0, 8($sp) # pega PC atual
+    li    $t2, 0xF0000000 # carrega máscara do PC
+    and   $t1, $s0, $t2 # pega os primeiros 4 bits de PC
+    
+    or    $a0, $t0, $t1 # calcula endereço de salto
+
     li    $v0, 34 # printa endereço de salto
     syscall
 
 novaLinhaInstrucao:
+    addi  $s0, $s0, 4 # incrementa PC
+
     li    $a0, '\n'
     li    $v0, 11
     syscall
     j     verificaFinalArquivo
 
 verificaFinalArquivo:
+    sw    $s0, 8($sp) # salva PC
+
     # lemos uma palavra do arquivo
     lw    $a0, 0($sp)   # $a0 <- descritor do arquivo
     addiu $a1, $sp, 4   # $a1 <- endereço do buffer de entrada 
@@ -444,7 +462,7 @@ verificaFinalArquivo:
     slti  $t0, $v0, 4
     beq   $t0, $zero, lacoLeiaPalavra
     # terminamos o programa
-    addiu $sp, $sp, 8 # restaura pilha
+    addiu $sp, $sp, 12 # restaura pilha
     li    $a0, 0 # 0 <- programa terminou de forma normal
     li    $v0, 17 # serviço exit2 - termina o programa
     syscall
